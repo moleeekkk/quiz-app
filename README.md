@@ -1,59 +1,102 @@
-# ⚡ Quizify - Full-Stack MERN Quiz Application
+# Full-Stack MERN Quiz Application
 
-Quizify is an industry-standard, production-grade MERN stack web application featuring real-time quiz taking, automatic grading, detailed performance breakdown, and an Admin Management Portal with full CRUD capabilities over MongoDB.
+<p align="center">
+  <img src="https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/Node.js-18.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Express.js-4.19-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express.js" />
+  <img src="https://img.shields.io/badge/MongoDB-Mongoose_8.5-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/Vite-8.2-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/License-MIT-green.style=for-the-badge" alt="License" />
+</p>
 
----
-
-## 🌟 Key Features
-
-- **Interactive Quiz Runner**: Countdown timers, question step indicators, quick-jump matrix, and immediate score submission.
-- **Detailed Performance Analytics**: SVG circular score indicator, breakdown of correct/incorrect answers, points calculation, and answer rationale explanations.
-- **Admin Portal (Full CRUD)**:
-  - Secure JWT authentication (`admin@quiz.com` / `admin123`).
-  - Create, view, update, and delete quizzes stored in MongoDB.
-  - Multi-question editor modal with dynamic choice management.
-  - One-click Seed Data database reset.
-- **Resilient MongoDB Connection**: Primary connection with automatic in-memory fallback (`mongodb-memory-server`) to run out-of-the-box without manual database setup.
-- **Industry Architecture**: Clean separation of `client/` (Vite + React 19) and `server/` (Node.js + Express API) orchestrating a monorepo workspace.
+This is a high-performance, industry-standard **Full-Stack MERN (MongoDB, Express, React, Node.js)** Quiz Application. It features real-time quiz taking, dynamic question navigation, automatic grading with answer explanations, and an Admin Management Portal with complete **CRUD** functionality and **JWT Authentication**.
 
 ---
 
-## 📁 Repository Directory Structure
+
+
+## 🌟 Features
+
+### 🎓 Quiz Experience (Client Side)
+- **Real-Time Timer**: Live countdown timer per quiz with visual warning alerts as time runs low.
+- **Question Matrix Quick-Jump**: Interactive matrix showing answered, unattempted, and active questions.
+- **Auto-Grading & Review**: Instant score calculation featuring an SVG circular progress ring, score percentages, pass/fail status, and full question-by-question rationale explanations.
+- **Multi-Filter & Search Bar**: Live search by title, category (React, JavaScript, Node.js, CSS), and difficulty level (Easy, Medium, Hard).
+
+### 🛡️ Admin Portal (Full CRUD)
+- **Secure JWT Auth**: State-persistent authentication using JSON Web Tokens and bcrypt hashed credentials.
+- **Quiz Management**:
+  - **Create**: Add new quizzes with custom time limits, passing scores, categories, and multiple choice questions.
+  - **Read**: Live search, filter, and analytics stats dashboard (Total Quizzes, Questions, Categories).
+  - **Update**: Full edit modal for existing quiz titles, options, correct answers, and explanations.
+  - **Delete**: Soft and hard delete confirmation modals with instant UI sync.
+- **One-Click Database Reset**: Restore default seed data directly from the Admin UI.
+
+### 💾 Zero-Config Database Resiliency
+- Primary connection attempts standard local/remote MongoDB instance.
+- **Automatic Fallback**: If local MongoDB is not running, the app automatically initializes an **in-memory database** (`mongodb-memory-server`) allowing instant execution out-of-the-box without setup errors!
+
+---
+
+## 🏗️ System Architecture
+
+```text
+ ┌────────────────────────────────────────────────────────┐
+ │                   React 19 SPA (Client)                │
+ │       (Hero, QuizRunner, QuizResult, AdminPortal)      │
+ └──────────────────────────┬─────────────────────────────┘
+                            │  HTTP / REST API (Fetch)
+                            ▼
+ ┌────────────────────────────────────────────────────────┐
+ │                  Express API (Server)                  │
+ │       (authRoutes, quizRoutes, JWT Auth Middleware)    │
+ └──────────────────────────┬─────────────────────────────┘
+                            │  Mongoose ODM
+                            ▼
+ ┌────────────────────────────────────────────────────────┐
+ │           MongoDB / MongoMemoryServer (Database)       │
+ │                  (Users & Quizzes Collections)         │
+ └────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📁 Folder Structure
 
 ```text
 QUIZ-APP/
-├── client/                     # Frontend Application (Vite + React 19)
-│   ├── public/                 # Static public files & favicon
+├── client/                     # Frontend Application Workspace (Vite + React 19)
+│   ├── public/                 # Static web assets & favicon
 │   ├── src/                    # React Source Code
-│   │   ├── assets/             # Images & static assets
-│   │   ├── components/         # Modular feature-based UI components
+│   │   ├── assets/             # Visual design assets
+│   │   ├── components/         # Feature-Scoped UI Components
 │   │   │   ├── admin/          # Admin Portal (AdminDashboard, AdminLoginModal, QuizEditorModal)
-│   │   │   ├── common/         # Layout & Common UI (Navbar, Footer, ConfirmModal)
+│   │   │   ├── common/         # Layout UI (Navbar, Footer, ConfirmModal)
 │   │   │   └── quiz/           # Quiz Gameplay (Hero, QuizCard, QuizRunner, QuizResult)
-│   │   ├── context/            # React AuthContext Provider
-│   │   ├── services/           # HTTP API client (api.js)
-│   │   ├── App.jsx             # Root layout & view router
-│   │   ├── main.jsx            # React entrypoint
-│   │   └── index.css           # Global Design Tokens & Styling
-│   ├── index.html              # Frontend HTML entry point
-│   ├── vite.config.js          # Vite build configuration
-│   ├── eslint.config.js        # ESLint code quality rules
-│   └── package.json            # Client dependencies & scripts
+│   │   ├── context/            # Global State Management (AuthContext)
+│   │   ├── services/           # HTTP API client wrapper (api.js)
+│   │   ├── App.jsx             # Main Application Router & Layout
+│   │   ├── main.jsx            # React DOM Entrypoint
+│   │   └── index.css           # Design Tokens, Glassmorphism & Responsive CSS
+│   ├── index.html              # HTML Index Entrypoint
+│   ├── vite.config.js          # Vite Build Configuration
+│   ├── eslint.config.js        # ESLint Configuration
+│   └── package.json            # Client Dependencies
 │
-├── server/                     # Backend API Server (Node.js + Express + MongoDB)
-│   ├── config/                 # Database connection & MongoMemoryServer fallback (db.js)
-│   ├── controllers/            # Request handlers (authController.js, quizController.js)
-│   ├── middleware/             # Auth JWT middleware & error handlers
-│   ├── models/                 # Mongoose database models (User.js, Quiz.js)
-│   ├── routes/                 # Express API routes (authRoutes.js, quizRoutes.js)
-│   ├── utils/                  # Seed data & password hashing utilities
-│   ├── .env                    # Server environment variables
-│   ├── package.json            # Server dependencies & scripts
-│   └── server.js               # Express application entrypoint
+├── server/                     # Backend API Workspace (Node.js + Express + MongoDB)
+│   ├── config/                 # DB Connection & MongoMemoryServer Fallback (db.js)
+│   ├── controllers/            # Business Logic Handlers (authController.js, quizController.js)
+│   ├── middleware/             # JWT Authentication Middleware (authMiddleware.js)
+│   ├── models/                 # Mongoose Data Schemas (User.js, Quiz.js)
+│   ├── routes/                 # Express API Endpoint Routes (authRoutes.js, quizRoutes.js)
+│   ├── utils/                  # Seed Data & Hashing Helpers (seedData.js)
+│   ├── .env                    # Environment Configuration
+│   ├── package.json            # Server Dependencies
+│   └── server.js               # Express Server Entrypoint
 │
-├── .gitignore                  # Git ignore rules
-├── README.md                   # Complete system documentation
-└── package.json                # Monorepo root orchestrator package.json
+├── .gitignore                  # Monorepo Git ignore configuration
+├── README.md                   # System Documentation
+└── package.json                # Root Monorepo Orchestrator package.json
 ```
 
 ---
@@ -61,69 +104,100 @@ QUIZ-APP/
 ## 🛠️ Tech Stack
 
 ### Frontend (`/client`)
-- **Library**: React 19 SPA
-- **Build Tool**: Vite 8
+- **Framework**: React 19 SPA
+- **Build System**: Vite 8
 - **Icons**: Lucide React
-- **Styling**: Modern Vanilla CSS with CSS Variables & Glassmorphism design system
+- **Styling**: Vanilla CSS with HSL design variables & glassmorphism theme
 
 ### Backend (`/server`)
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: MongoDB with Mongoose ODM (and `mongodb-memory-server` fallback)
-- **Security**: JSON Web Tokens (JWT) & `bcryptjs` password hashing
+- **Runtime**: Node.js (v18+)
+- **Web Server**: Express.js
+- **Database**: MongoDB with Mongoose 8 ODM
+- **In-Memory Fallback**: `mongodb-memory-server`
+- **Security**: JWT (jsonwebtoken) & bcryptjs
+
+---
+
+## 🔑 Default Admin Credentials
+- **Email**: `admin@quiz.com`
+- **Password**: `admin123`
 
 ---
 
 ## 🚀 Quick Start Guide
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher recommended)
-- [npm](https://www.npmjs.com/) (v9 or higher)
+- **Node.js**: `v18.0.0` or higher
+- **npm**: `v9.0.0` or higher
 
-### 1. Installation
-Install all dependencies across the monorepo root, client, and server:
+### 1. Clone the Repository
+```bash
+git clone https://github.com/your-username/QUIZ-APP.git
+cd QUIZ-APP
+```
+
+### 2. Install Dependencies
+Install packages for root monorepo, client, and server in one command:
 ```bash
 npm run install:all
 ```
 
-### 2. Running the Application (Development Mode)
-Run both frontend and backend concurrently with a single command:
+### 3. Run Development Servers
+Launch both frontend client (`http://localhost:5173`) and Express server (`http://localhost:5000`) concurrently:
 ```bash
 npm start
 ```
-- **Frontend App**: `http://localhost:5173`
-- **Backend API**: `http://localhost:5000`
-
-### 3. Alternative Commands
-| Command | Description |
-| :--- | :--- |
-| `npm start` / `npm run dev` | Runs both `client` and `server` concurrently |
-| `npm run client` | Runs Vite frontend dev server (`http://localhost:5173`) |
-| `npm run server` | Runs Express backend API (`http://localhost:5000`) |
-| `npm run build` | Builds client production bundle into `client/dist` |
 
 ---
 
-## 🔑 Default Admin Credentials
+## ⚙️ Environment Variables
 
-Access the Admin Portal via the top navigation bar using the following default credentials:
-- **Email**: `admin@quiz.com`
-- **Password**: `admin123`
+The server configuration file is located at `server/.env`:
+
+```env
+PORT=5000
+MONGODB_URI=mongodb://127.0.0.1:27017/quiz_db
+JWT_SECRET=super_secret_jwt_key_quiz_app_2026_mca
+NODE_ENV=development
+```
 
 ---
 
-## 📡 API Endpoint Overview
+## 📡 API Endpoint Reference
 
-### Public Endpoints
-- `GET /api/quizzes`: Fetch all quizzes (supports `?category=...&difficulty=...&search=...` filters).
-- `GET /api/quizzes/:id`: Fetch a single quiz by ID.
-- `POST /api/quizzes/:id/submit`: Grade submitted quiz answers and return score breakdown.
-- `POST /api/auth/login`: Admin authentication endpoint.
+### Public API Routes
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/quizzes` | Fetch quizzes (supports `?category=`, `?difficulty=`, `?search=`) |
+| `GET` | `/api/quizzes/:id` | Fetch quiz details by ID |
+| `POST` | `/api/quizzes/:id/submit` | Grade submitted answers and return score analysis |
+| `POST` | `/api/auth/login` | Authenticate admin user & receive JWT token |
 
-### Protected Admin Endpoints (Requires `Authorization: Bearer <JWT_TOKEN>`)
-- `GET /api/auth/me`: Verify active admin token.
-- `GET /api/quizzes/admin/stats`: Fetch dashboard statistics.
-- `POST /api/quizzes`: Create a new quiz.
-- `PUT /api/quizzes/:id`: Update an existing quiz.
-- `DELETE /api/quizzes/:id`: Delete a quiz from the database.
-- `POST /api/quizzes/seed`: Reset seed data in database.
+### Protected Admin Routes (`Authorization: Bearer <TOKEN>`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/auth/me` | Verify active JWT admin session |
+| `GET` | `/api/quizzes/admin/stats` | Fetch summary statistics for admin dashboard |
+| `POST` | `/api/quizzes` | Create a new quiz with questions |
+| `PUT` | `/api/quizzes/:id` | Update an existing quiz by ID |
+| `DELETE` | `/api/quizzes/:id` | Delete quiz from MongoDB |
+| `POST` | `/api/quizzes/seed` | Reset database with initial seed quizzes |
+
+---
+
+## 🔍 Troubleshooting
+
+<details>
+<summary><b>1. Port 5000 is already in use</b></summary>
+Change the <code>PORT</code> variable in <code>server/.env</code> to another port like <code>PORT=5001</code>, and update <code>API_BASE_URL</code> in <code>client/src/services/api.js</code>.
+</details>
+
+<details>
+<summary><b>2. MongoDB fails to connect locally</b></summary>
+No action needed! The application automatically falls back to <code>MongoMemoryServer</code> in-memory MongoDB database so you can test immediately.
+</details>
+
+<details>
+<summary><b>3. Client build issues</b></summary>
+Run <code>npm run build</code> from the root folder. Ensure Node version is 18+.
+</details>
