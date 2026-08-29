@@ -1,0 +1,17 @@
+{
+  "name": "quiz-app-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n \"CLIENT,SERVER\" -c \"cyan,magenta\" \"npm --prefix client run dev\" \"npm --prefix server run dev\"",
+    "start": "concurrently -n \"CLIENT,SERVER\" -c \"cyan,magenta\" \"npm --prefix client run dev\" \"npm --prefix server run dev\"",
+    "client": "npm --prefix client run dev",
+    "server": "npm --prefix server run dev",
+    "build": "npm --prefix client run build",
+    "install:all": "npm install && npm --prefix client install && npm --prefix server install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
