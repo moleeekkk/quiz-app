@@ -53,8 +53,8 @@ export const createQuiz = async (req, res) => {
   try {
     const { title, description, category, difficulty, durationMinutes, passingScore, questions } = req.body;
 
-    if (!title || !description || !questions || questions.length === 0) {
-      return res.status(400).json({ message: 'Title, description, and at least 1 question are required' });
+    if (!title || !description) {
+      return res.status(400).json({ message: 'Title and description are required' });
     }
 
     const quiz = new Quiz({
@@ -64,8 +64,7 @@ export const createQuiz = async (req, res) => {
       difficulty: difficulty || 'Medium',
       durationMinutes: Number(durationMinutes) || 10,
       passingScore: Number(passingScore) || 60,
-      questions,
-      createdBy: req.user ? req.user._id : null,
+      questions: Array.isArray(questions) ? questions : [],
     });
 
     const createdQuiz = await quiz.save();
@@ -218,33 +217,23 @@ export const getAdminStats = async (req, res) => {
   }
 };
 
-// @desc    Seed initial database with admin and sample quizzes
+// @desc    Seed initial database admin user
 // @route   POST /api/seed
 // @access  Public / Admin
 export const seedDatabase = async (req, res) => {
   try {
-    // Check if admin exists, if not create
     let admin = await User.findOne({ email: defaultAdmin.email });
     if (!admin) {
       admin = new User(defaultAdmin);
       await admin.save();
     }
 
-    // Insert sample quizzes if none exist or if force flag is sent
-    const existingCount = await Quiz.countDocuments();
-    if (existingCount === 0 || req.body.force) {
-      if (req.body.force) {
-        await Quiz.deleteMany({});
-      }
-      const quizzesWithUser = initialQuizzes.map((q) => ({
-        ...q,
-        createdBy: admin._id,
-      }));
-      await Quiz.insertMany(quizzesWithUser);
+    if (req.body.force) {
+      await Quiz.deleteMany({});
     }
 
     res.json({
-      message: 'Database seeded successfully',
+      message: 'Database initialized successfully',
       adminCredentials: {
         email: defaultAdmin.email,
         password: defaultAdmin.password,

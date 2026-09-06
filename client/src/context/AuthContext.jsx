@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { api } from '../services/api';
 
 const AuthContext = createContext();
@@ -7,6 +7,12 @@ export const AuthProvider = ({ children }) => {
   const [adminUser, setAdminUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('quiz_admin_token') || null);
   const [loading, setLoading] = useState(true);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem('quiz_admin_token');
+    setToken(null);
+    setAdminUser(null);
+  }, []);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -23,7 +29,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
-  }, [token]);
+  }, [token, logout]);
 
   const login = async (email, password) => {
     const data = await api.loginAdmin({ email, password });
@@ -31,12 +37,6 @@ export const AuthProvider = ({ children }) => {
     setToken(data.token);
     setAdminUser(data);
     return data;
-  };
-
-  const logout = () => {
-    localStorage.removeItem('quiz_admin_token');
-    setToken(null);
-    setAdminUser(null);
   };
 
   return (

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Trophy,
   CheckCircle2,
@@ -32,157 +31,145 @@ export default function QuizResult({ result, onRetake, onBackHome }) {
     return `${secs}s`;
   };
 
-  const strokeDashoffset = 440 - (440 * percentage) / 100;
-
   return (
-    <div className="result-container">
+    <div className="w-full sm:w-[85%] max-w-7xl mx-auto px-4 py-8 space-y-6">
       {/* Top Hero Score Card */}
-      <div className="result-card-hero">
-        <div className={`result-status-badge ${passed ? 'passed' : 'failed'}`}>
-          {passed ? <Trophy size={18} /> : <AlertCircle size={18} />}
+      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-xs text-center space-y-6">
+        <div
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${passed
+              ? 'bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20'
+              : 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20'
+            }`}
+        >
+          {passed ? <Trophy className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           <span>{passed ? 'Passed - Excellent Job!' : 'Needs Practice - Try Again!'}</span>
         </div>
 
-        {/* Circular SVG Score Wheel */}
-        <div className="score-circle-wrap">
-          <svg className="score-circle-svg" viewBox="0 0 160 160">
-            <circle className="score-circle-bg" cx="80" cy="80" r="70" />
-            <circle
-              className="score-circle-val"
-              cx="80"
-              cy="80"
-              r="70"
-              style={{
-                strokeDasharray: 440,
-                strokeDashoffset: strokeDashoffset,
-                stroke: passed ? 'var(--primary)' : 'var(--wrong)',
-              }}
-            />
-          </svg>
-          <div className="score-circle-text">
-            <span className="score-percentage">{percentage}%</span>
-            <span className="score-label">Final Score</span>
+        {/* Big Score Number */}
+        <div className="space-y-1">
+          <div className={`text-4xl sm:text-5xl font-extrabold ${passed ? 'text-[#2563EB]' : 'text-[#EF4444]'}`}>
+            {percentage}%
           </div>
+          <div className="text-xs font-bold uppercase tracking-wider text-[#64748B]">Final Score</div>
         </div>
 
-        <h2 className="result-headline">{quizTitle}</h2>
-        <p className="result-subhead">
-          You earned {earnedPoints} out of {totalPoints} total points!
-        </p>
+        <div>
+          <h2 className="text-xl font-bold text-[#1E293B]">{quizTitle}</h2>
+          <p className="text-xs text-[#64748B] mt-1">
+            You earned <strong className="text-[#1E293B]">{earnedPoints}</strong> out of <strong className="text-[#1E293B]">{totalPoints}</strong> total points!
+          </p>
+        </div>
 
         {/* Key Metrics Grid */}
-        <div className="result-stats-grid">
-          <div className="stat-box">
-            <div className="stat-icon correct">
-              <CheckCircle2 size={24} />
-            </div>
-            <div className="stat-info">
-              <div className="stat-number">{correctCount}</div>
-              <div className="stat-desc">Correct Answers</div>
-            </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+          <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E2E8F0] text-center space-y-1">
+            <CheckCircle2 className="w-5 h-5 text-[#22C55E] mx-auto" />
+            <div className="text-lg font-bold text-[#1E293B]">{correctCount}</div>
+            <div className="text-[10px] font-semibold text-[#64748B] uppercase">Correct</div>
           </div>
 
-          <div className="stat-box">
-            <div className="stat-icon incorrect">
-              <XCircle size={24} />
-            </div>
-            <div className="stat-info">
-              <div className="stat-number">{incorrectCount}</div>
-              <div className="stat-desc">Incorrect Answers</div>
-            </div>
+          <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E2E8F0] text-center space-y-1">
+            <XCircle className="w-5 h-5 text-[#EF4444] mx-auto" />
+            <div className="text-lg font-bold text-[#1E293B]">{incorrectCount}</div>
+            <div className="text-[10px] font-semibold text-[#64748B] uppercase">Incorrect</div>
           </div>
 
-          <div className="stat-box">
-            <div className="stat-icon highlight">
-              <Sparkles size={24} />
-            </div>
-            <div className="stat-info">
-              <div className="stat-number">{unattemptedCount}</div>
-              <div className="stat-desc">Unattempted</div>
-            </div>
+          <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E2E8F0] text-center space-y-1">
+            <Sparkles className="w-5 h-5 text-[#F59E0B] mx-auto" />
+            <div className="text-lg font-bold text-[#1E293B]">{unattemptedCount}</div>
+            <div className="text-[10px] font-semibold text-[#64748B] uppercase">Unattempted</div>
           </div>
 
-          <div className="stat-box">
-            <div className="stat-icon score">
-              <Clock size={24} />
-            </div>
-            <div className="stat-info">
-              <div className="stat-number">{formatSeconds(timeTakenSeconds)}</div>
-              <div className="stat-desc">Time Spent</div>
-            </div>
+          <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E2E8F0] text-center space-y-1">
+            <Clock className="w-5 h-5 text-[#2563EB] mx-auto" />
+            <div className="text-lg font-bold text-[#1E293B]">{formatSeconds(timeTakenSeconds)}</div>
+            <div className="text-[10px] font-semibold text-[#64748B] uppercase">Time Spent</div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="result-action-buttons">
-          <button className="btn-secondary" onClick={onBackHome}>
-            <Home size={18} />
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button
+            className="w-full sm:w-auto px-5 py-2.5 bg-white border border-[#E2E8F0] text-[#1E293B] hover:bg-[#F8FAFC] text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            onClick={onBackHome}
+          >
+            <Home className="w-4 h-4" />
             <span>Back to All Quizzes</span>
           </button>
-          <button className="btn-primary" onClick={onRetake}>
-            <RotateCcw size={18} />
+          <button
+            className="w-full sm:w-auto px-5 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+            onClick={onRetake}
+          >
+            <RotateCcw className="w-4 h-4" />
             <span>Retake Quiz</span>
           </button>
         </div>
       </div>
 
       {/* Detailed Question Review Breakdown */}
-      <div className="breakdown-section">
-        <h3 className="breakdown-title">
-          <HelpCircle size={20} color="var(--primary)" />
-          <span>Detailed Answer Review ({breakdown.length} Questions)</span>
+      <div className="space-y-4">
+        <h3 className="text-sm font-bold text-[#1E293B] flex items-center gap-2">
+          <HelpCircle className="w-4 h-4 text-[#2563EB]" />
+          <span>Answer Review ({breakdown.length} Questions)</span>
         </h3>
 
-        <div className="breakdown-list">
+        <div className="space-y-3">
           {breakdown.map((item, idx) => {
             return (
               <div
                 key={idx}
-                className={`breakdown-item ${item.isCorrect ? 'is-correct' : 'is-incorrect'}`}
+                className={`bg-white p-4 rounded-xl border space-y-3 ${item.isCorrect ? 'border-[#22C55E]/30 bg-[#22C55E]/5' : 'border-[#EF4444]/30 bg-[#EF4444]/5'
+                  }`}
               >
-                <div className="breakdown-item-header">
-                  <div className="breakdown-q-title">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="text-xs font-bold text-[#1E293B]">
                     Q{idx + 1}. {item.questionText}
                   </div>
-                  <span className={`breakdown-status-tag ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+                  <span
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold shrink-0 self-start sm:self-auto ${item.isCorrect ? 'bg-[#22C55E]/10 text-[#22C55E]' : 'bg-[#EF4444]/10 text-[#EF4444]'
+                      }`}
+                  >
                     {item.isCorrect ? (
                       <>
-                        <CheckCircle2 size={14} /> Correct (+{item.points} pts)
+                        <CheckCircle2 className="w-3 h-3" /> Correct (+{item.points} pts)
                       </>
                     ) : (
                       <>
-                        <XCircle size={14} /> Incorrect (0 pts)
+                        <XCircle className="w-3 h-3" /> Incorrect (0 pts)
                       </>
                     )}
                   </span>
                 </div>
 
-                <div className="breakdown-options-grid">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                   {item.options.map((optText, optIdx) => {
                     const isUserChoice = item.userChoice === optIdx;
                     const isCorrectChoice = item.correctOptionIndex === optIdx;
 
-                    let pillClass = 'breakdown-option-pill';
+                    let bgStyle = 'bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B]';
                     if (isUserChoice && isCorrectChoice) {
-                      pillClass += ' user-correct';
+                      bgStyle = 'bg-[#22C55E]/10 border-[#22C55E] text-[#15803D] font-bold';
                     } else if (isUserChoice && !isCorrectChoice) {
-                      pillClass += ' user-wrong';
+                      bgStyle = 'bg-[#EF4444]/10 border-[#EF4444] text-[#B91C1C] font-bold';
                     } else if (isCorrectChoice) {
-                      pillClass += ' actual-correct';
+                      bgStyle = 'bg-[#22C55E]/10 border-[#22C55E] text-[#15803D] font-semibold';
                     }
 
                     return (
-                      <div key={optIdx} className={pillClass}>
+                      <div
+                        key={optIdx}
+                        className={`p-2.5 rounded-lg border text-xs flex items-center justify-between gap-2 ${bgStyle}`}
+                      >
                         <span>
                           {String.fromCharCode(65 + optIdx)}. {optText}
                         </span>
                         {isUserChoice && (
-                          <span style={{ fontSize: '0.75rem', fontWeight: '800' }}>
+                          <span className="text-[10px] font-bold uppercase shrink-0">
                             (Your Choice)
                           </span>
                         )}
                         {isCorrectChoice && !isUserChoice && (
-                          <span style={{ fontSize: '0.75rem', fontWeight: '800' }}>
+                          <span className="text-[10px] font-bold uppercase shrink-0">
                             (Correct Answer)
                           </span>
                         )}
@@ -190,15 +177,6 @@ export default function QuizResult({ result, onRetake, onBackHome }) {
                     );
                   })}
                 </div>
-
-                {item.explanation && (
-                  <div className="explanation-box">
-                    <Sparkles size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-                    <span>
-                      <strong>Explanation:</strong> {item.explanation}
-                    </span>
-                  </div>
-                )}
               </div>
             );
           })}

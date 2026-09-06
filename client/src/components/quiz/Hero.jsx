@@ -1,8 +1,6 @@
-import React from 'react';
-import { Search, Sparkles, Filter, Award, Zap } from 'lucide-react';
+import { Search, Filter, Layers } from 'lucide-react';
 
 export default function Hero({
-  onExploreClick,
   searchQuery,
   setSearchQuery,
   selectedCategory,
@@ -12,82 +10,61 @@ export default function Hero({
   categories = [],
 }) {
   return (
-    <section className="hero-section">
-      <div className="hero-content">
-        <div className="hero-tag">
-          <Sparkles size={14} />
-          <span>Interactive MERN Quiz Platform</span>
+    <section className="max-h-[60px] md:h-[100px] bg-white border-b border-[#E2E8F0] shadow-xs flex items-center px-4 sm:px-6 lg:px-8 sticky top-0 z-20 transition-all py-3 md:py-0">
+      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 items-center gap-3 sm:gap-4">
+        {/* Left: Brand / Logo Title */}
+        <div className="flex items-center justify-center md:justify-start">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#1E293B] tracking-tight leading-tight">Quiz App</h1>
         </div>
 
-        <h1 className="hero-title">
-          Test & Elevate Your <span className="gradient-text">Developer Skills</span>
-        </h1>
-
-        <p className="hero-subtitle">
-          Master Full-Stack JavaScript, React 19, Node.js, MongoDB, and System Architecture with instant feedback and deep answer breakdowns.
-        </p>
-
-        {/* Hero Features Bar */}
-        <div className="hero-badges-row">
-          <div className="hero-badge-item">
-            <Zap size={16} color="var(--accent)" />
-            <span>Instant Results</span>
-          </div>
-          <div className="hero-badge-item">
-            <Award size={16} color="var(--secondary-accent)" />
-            <span>Real-time Scoring</span>
-          </div>
-          <div className="hero-badge-item">
-            <Sparkles size={16} color="var(--primary)" />
-            <span>Full Explanations</span>
-          </div>
+        {/* Center: Search Bar */}
+        <div className="relative w-full max-w-md mx-auto">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+          <input
+            type="text"
+            className="w-full pl-9 pr-3 py-2 text-xs font-medium rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] text-[#1E293B] placeholder-[#94A3B8] focus:bg-white focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10 transition-all"
+            placeholder="Search quizzes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
-        {/* Search & Filter Bar */}
-        <div className="search-filter-card">
-          <div className="search-box">
-            <Search size={18} />
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search quiz topic or keyword..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        {/* Right: Category Selection & Difficulty Selection */}
+        <div className="flex items-center justify-center md:justify-end gap-2 sm:gap-3">
+          {/* Category Selection */}
+          <div className="relative flex-1 md:flex-none w-full md:w-40">
+            <Filter className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] pointer-events-none" />
+            <select
+              className="w-full pl-8 pr-3 py-2 text-xs font-semibold rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] text-[#1E293B] focus:bg-white focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10 cursor-pointer transition-all"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+              <option value="All">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="filter-group">
-            <div className="select-wrapper">
-              <Filter size={16} className="select-icon" />
-              <select
-                className="filter-select"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="All">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="select-wrapper">
-              <select
-                className="filter-select"
-                value={selectedDifficulty}
-                onChange={(e) => setSelectedDifficulty(e.target.value)}
-              >
-                <option value="All">All Difficulties</option>
-                <option value="Easy">Easy</option>
-                <option value="Medium">Medium</option>
-                <option value="Hard">Hard</option>
-              </select>
-            </div>
+          {/* Difficulty Selection */}
+          <div className="relative flex-1 md:flex-none w-full md:w-36">
+            <Layers className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] pointer-events-none" />
+            <select
+              className="w-full pl-8 pr-3 py-2 text-xs font-semibold rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] text-[#1E293B] focus:bg-white focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10 cursor-pointer transition-all"
+              value={selectedDifficulty}
+              onChange={(e) => setSelectedDifficulty(e.target.value)}
+            >
+              <option value="All">All Difficulties</option>
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
           </div>
         </div>
       </div>
     </section>
   );
 }
+

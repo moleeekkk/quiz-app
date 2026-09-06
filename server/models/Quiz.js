@@ -58,10 +58,7 @@ const quizSchema = new mongoose.Schema(
       default: 60, // percentage
     },
     questions: [questionSchema],
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
+
   },
   { timestamps: true }
 );

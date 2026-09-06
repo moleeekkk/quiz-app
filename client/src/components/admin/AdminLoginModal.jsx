@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Lock, X, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -25,7 +25,6 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }) {
       await login(email, password);
       setSubmitting(false);
       onSuccess();
-      onClose();
     } catch (err) {
       setError(err.message || 'Invalid admin credentials');
       setSubmitting(false);
@@ -33,56 +32,45 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <ShieldCheck color="var(--primary)" size={22} />
-            <h3>Admin Portal Sign In</h3>
+    <div
+      className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl border border-[#E2E8F0] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-[#E2E8F0] flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <h3 className="text-sm font-bold text-[#1E293B]">Admin Portal Sign In</h3>
           </div>
-          <button className="modal-close-btn" onClick={onClose}>
-            <X size={20} />
+          <button
+            className="p-1 rounded-lg text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+            onClick={onClose}
+          >
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="modal-body">
+          <div className="p-6 space-y-4">
             {error && (
-              <div
-                style={{
-                  background: '#FEF2F2',
-                  border: '1px solid #FCA5A5',
-                  color: 'var(--wrong)',
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--radius-md)',
-                  marginBottom: '1rem',
-                  fontSize: '0.85rem',
-                  fontWeight: '600',
-                }}
-              >
+              <div className="p-3 bg-[#EF4444]/10 border border-[#EF4444]/20 text-[#EF4444] rounded-xl text-xs font-semibold">
                 {error}
               </div>
             )}
 
-            {/* Quick credentials hint */}
-            <div className="credential-hint">
-              <div>
-                <strong>Default Credentials:</strong> admin@quiz.com / admin123
-              </div>
-              <button
-                type="button"
-                className="btn-quick-fill"
-                onClick={handleQuickFill}
-              >
-                Fill Credentials
-              </button>
-            </div>
 
-            <div className="form-group">
-              <label>Admin Email Address</label>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-[#1E293B]">Admin Email Address</label>
               <input
                 type="email"
-                className="form-control"
+                className="w-full px-3 py-2.5 text-xs rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white focus:outline-none focus:border-[#2563EB] text-[#1E293B]"
                 placeholder="admin@quiz.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -90,11 +78,11 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }) {
               />
             </div>
 
-            <div className="form-group">
-              <label>Password</label>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-[#1E293B]">Password</label>
               <input
                 type="password"
-                className="form-control"
+                className="w-full px-3 py-2.5 text-xs rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white focus:outline-none focus:border-[#2563EB] text-[#1E293B]"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -103,17 +91,22 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }) {
             </div>
           </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn-secondary" onClick={onClose}>
+          {/* Footer */}
+          <div className="p-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex justify-end gap-2">
+            <button
+              type="button"
+              className="px-4 py-2 text-xs font-semibold rounded-xl border border-[#E2E8F0] text-[#1E293B] hover:bg-white transition-colors cursor-pointer"
+              onClick={onClose}
+            >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn-primary"
+              className="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
               disabled={submitting}
             >
-              <Lock size={16} />
-              <span>{submitting ? 'Authenticating...' : 'Sign In as Admin'}</span>
+              <Lock className="w-4 h-4" />
+              <span>{submitting ? 'Authenticating...' : 'Sign In'}</span>
             </button>
           </div>
         </form>
