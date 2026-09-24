@@ -1,6 +1,7 @@
 import Quiz from '../models/Quiz.js';
 import User from '../models/User.js';
-import { initialQuizzes, defaultAdmin } from '../utils/seedData.js';
+import QuizAttempt from '../models/QuizAttempt.js';
+import { defaultAdmin } from '../utils/seedData.js';
 
 // @desc    Get all quizzes (with search/filter)
 // @route   GET /api/quizzes
@@ -140,7 +141,21 @@ export const submitQuiz = async (req, res) => {
       const qPoints = q.points || 10;
       totalPoints += qPoints;
 
-      const userChoice = answers ? answers[q._id] ?? answers[idx] : undefined;
+      const qIdStr = q._id ? q._id.toString() : null;
+
+      let userChoice = undefined;
+      if (answers) {
+        if (qIdStr && answers[qIdStr] !== undefined && answers[qIdStr] !== null) {
+          userChoice = answers[qIdStr];
+        } else if (q._id && answers[q._id] !== undefined && answers[q._id] !== null) {
+          userChoice = answers[q._id];
+        } else if (answers[idx] !== undefined && answers[idx] !== null) {
+          userChoice = answers[idx];
+        } else if (answers[String(idx)] !== undefined && answers[String(idx)] !== null) {
+          userChoice = answers[String(idx)];
+        }
+      }
+
       const isAttempted = userChoice !== undefined && userChoice !== null;
       const isCorrect = isAttempted && Number(userChoice) === Number(q.correctOptionIndex);
 
@@ -160,7 +175,6 @@ export const submitQuiz = async (req, res) => {
         userChoice: isAttempted ? Number(userChoice) : null,
         correctOptionIndex: q.correctOptionIndex,
         isCorrect,
-        explanation: q.explanation,
         points: qPoints,
       };
     });
@@ -168,7 +182,29 @@ export const submitQuiz = async (req, res) => {
     const percentage = Math.round((earnedPoints / (totalPoints || 1)) * 100);
     const passed = percentage >= quiz.passingScore;
 
+    let savedAttempt = null;
+    if (req.user && req.user._id) {
+      savedAttempt = await QuizAttempt.create({
+        userId: req.user._id,
+        quizId: quiz._id,
+        quizTitle: quiz.title,
+        category: quiz.category,
+        difficulty: quiz.difficulty,
+        earnedPoints,
+        totalPoints,
+        percentage,
+        passed,
+        correctCount,
+        incorrectCount,
+        unattemptedCount,
+        totalQuestions: quiz.questions.length,
+        timeTakenSeconds: timeTakenSeconds || 0,
+        breakdown,
+      });
+    }
+
     res.json({
+      attemptId: savedAttempt ? savedAttempt._id : null,
       quizId: quiz._id,
       quizTitle: quiz.title,
       category: quiz.category,
@@ -190,6 +226,57 @@ export const submitQuiz = async (req, res) => {
   }
 };
 
+// @desc    Get authenticated user given quiz history
+// @route   GET /api/quizzes/user/history
+// @access  Private User
+export const getUserHistory = async (req, res) => {
+  try {
+    const attempts = await QuizAttempt.find({ userId: req.user._id })
+      .sort({ createdAt: -1 });
+    res.json(attempts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get summary of user quiz attempts (for card badges)
+// @route   GET /api/quizzes/user/summary
+// @access  Private User
+export const getUserAttemptsSummary = async (req, res) => {
+  try {
+    const attempts = await QuizAttempt.find({ userId: req.user._id }).sort({ createdAt: -1 });
+
+    const summaryMap = {};
+    attempts.forEach((attempt) => {
+      const qId = attempt.quizId.toString();
+      if (!summaryMap[qId]) {
+        summaryMap[qId] = {
+          attemptsCount: 1,
+          latestPercentage: attempt.percentage,
+          latestEarnedPoints: attempt.earnedPoints,
+          latestTotalPoints: attempt.totalPoints,
+          latestPassed: attempt.passed,
+          bestPercentage: attempt.percentage,
+          bestEarnedPoints: attempt.earnedPoints,
+          totalQuestions: attempt.totalQuestions,
+          lastAttemptedAt: attempt.createdAt,
+        };
+      } else {
+        summaryMap[qId].attemptsCount += 1;
+        if (attempt.percentage > summaryMap[qId].bestPercentage) {
+          summaryMap[qId].bestPercentage = attempt.percentage;
+          summaryMap[qId].bestEarnedPoints = attempt.earnedPoints;
+        }
+      }
+    });
+
+    res.json(summaryMap);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 // @desc    Get dashboard statistics for Admin
 // @route   GET /api/quizzes/admin/stats
 // @access  Private Admin
@@ -197,7 +284,7 @@ export const getAdminStats = async (req, res) => {
   try {
     const totalQuizzes = await Quiz.countDocuments();
     const quizzes = await Quiz.find();
-    
+
     let totalQuestions = 0;
     const categoriesSet = new Set();
 

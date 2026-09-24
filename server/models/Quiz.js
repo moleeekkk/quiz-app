@@ -14,10 +14,6 @@ const questionSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  explanation: {
-    type: String,
-    default: '',
-  },
   points: {
     type: Number,
     default: 10,

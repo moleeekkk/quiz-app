@@ -1,26 +1,372 @@
 import { useState, useEffect } from 'react';
 import {
-  Plus,
-  Edit3,
-  Trash2,
+  LayoutDashboard,
   FileText,
-  HelpCircle,
-  Search,
   Tag,
-  Shield,
-  Sparkles,
-  CheckCircle2,
-  XCircle,
-  Clock,
   Users,
-  Check,
+  Shield,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  Menu,
   X,
+  Lock,
+  ShieldCheck,
 } from 'lucide-react';
 import { api } from '../../services/api';
-import QuizQuestionModal from './QuizQuestionModal';
-import CategoryEditModal from './CategoryEditModal';
-import Sidebar from './Sidebar';
+import { useAuth } from '../../context/AuthContext';
+import QuizManagement, { QuizQuestionModal, QuizEditorModal } from './QuizManagement';
+import CategoryManagement, { CategoryEditModal } from './CategoryManagement';
+import UserManagement, { UserEditModal } from './UserManagement';
 
+// Sub-component 1: Sidebar
+export function Sidebar({
+  activeModule,
+  onModuleSelect,
+  isCollapsed,
+  onToggleCollapse,
+  onLogout,
+}) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const sidebarItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'quizzes', label: 'Quiz Management', icon: FileText },
+    { id: 'categories', label: 'Category Management', icon: Tag },
+    { id: 'users', label: 'User Management', icon: Users },
+  ];
+
+  const handleSelect = (id) => {
+    onModuleSelect(id);
+    setIsMobileMenuOpen(false);
+  };
+
+  return (
+    <>
+      {/* Mobile Top Bar (< 768px) */}
+      <div className="md:hidden bg-white border-b border-[#D1FAE5] px-4 py-3 flex items-center justify-between sticky top-0 z-40 w-full shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-xl bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]">
+            <Shield className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-sm font-extrabold text-[#064E3B] mb-0">Admin Portal</h1>
+            <p className="text-[10px] font-bold text-[#059669] uppercase tracking-wider mb-0">
+              {sidebarItems.find((i) => i.id === activeModule)?.label || 'Dashboard'}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 rounded-xl text-[#64748B] hover:text-[#064E3B] hover:bg-[#ECFDF5] border border-[#D1FAE5] transition-colors cursor-pointer"
+          aria-label="Toggle navigation menu"
+        >
+          {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* Mobile Backdrop & Drawer Menu */}
+      {isMobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs flex flex-col justify-start pt-16 px-4 pb-6"
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-[#D1FAE5] shadow-xl p-4 space-y-4 animate-in fade-in slide-in-from-top-4 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider px-2 mb-0">
+              Navigation Menu
+            </p>
+            <nav className="space-y-1">
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeModule === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleSelect(item.id)}
+                    className={`
+                      w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-semibold transition-all cursor-pointer
+                      ${
+                        isActive
+                          ? 'bg-[#059669] text-white shadow-sm shadow-emerald-500/20'
+                          : 'text-[#64748B] hover:bg-[#ECFDF5] hover:text-[#064E3B]'
+                      }
+                    `}
+                  >
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#059669]'}`} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            <div className="pt-2 border-t border-[#D1FAE5]">
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onLogout();
+                }}
+                className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs text-[#DC2626] font-semibold rounded-xl hover:bg-[#FEF2F2] transition-colors cursor-pointer"
+              >
+                <LogOut className="w-4 h-4 shrink-0" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar (>= 768px) */}
+      <aside
+        className={`
+          hidden md:flex bg-white border-r border-[#D1FAE5] flex-col justify-between z-40
+          transition-all duration-300 ease-in-out shrink-0 sticky top-0 h-screen
+          ${isCollapsed ? 'w-16' : 'w-64'}
+        `}
+      >
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* Brand Header */}
+          <div
+            className={`p-4 border-b border-[#D1FAE5] shrink-0 flex items-center min-h-[64px] ${
+              isCollapsed ? 'justify-center flex-col gap-2' : 'justify-between'
+            }`}
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="p-2 rounded-xl bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] shrink-0" title="Admin Portal">
+                <Shield className="w-5 h-5" />
+              </div>
+              {!isCollapsed && (
+                <div className="truncate">
+                  <span className="block text-[10px] tracking-wider uppercase font-extrabold text-[#059669]">
+                    Admin Portal
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={onToggleCollapse}
+              className="p-1.5 rounded-lg text-[#64748B] hover:text-[#064E3B] hover:bg-[#ECFDF5] border border-[#D1FAE5] transition-colors cursor-pointer"
+              title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            >
+              {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {/* Navigation List */}
+          <div className="px-2 py-4 overflow-y-auto flex-1 custom-scrollbar">
+            {!isCollapsed && (
+              <p className="px-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+                Portal Activities
+              </p>
+            )}
+            <nav className="space-y-1">
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeModule === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => onModuleSelect(item.id)}
+                    title={isCollapsed ? item.label : ''}
+                    className={`
+                      w-full flex items-center rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer
+                      ${isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'}
+                      ${
+                        isActive
+                          ? 'bg-[#059669] text-white shadow-sm shadow-emerald-500/20'
+                          : 'text-[#64748B] hover:bg-[#ECFDF5] hover:text-[#064E3B]'
+                      }
+                    `}
+                  >
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#059669]'}`} />
+                    {!isCollapsed && <span className="truncate">{item.label}</span>}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Footer Sign Out */}
+          <div className="p-2 border-t border-[#D1FAE5] shrink-0 bg-white">
+            <button
+              onClick={onLogout}
+              title={isCollapsed ? 'Sign Out' : ''}
+              className={`
+                w-full flex items-center justify-center text-xs text-[#DC2626] font-semibold rounded-xl hover:bg-[#FEF2F2] transition-colors cursor-pointer
+                ${isCollapsed ? 'p-2.5' : 'gap-2 px-3 py-2'}
+              `}
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              {!isCollapsed && <span>Sign Out</span>}
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+// Sub-component 2: Admin Overview
+export function AdminOverview({
+  stats,
+  quizzesCount = 0,
+  categoriesCount = 0,
+  usersCount = 0,
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="bg-white p-5 rounded-xl border border-[#D1FAE5] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-bold text-[#064E3B] mb-0">Admin Dashboard</h2>
+        </div>
+      </div>
+
+      {/* Metrics Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl p-5 border border-[#D1FAE5] shadow-xs flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-0">Total Quizzes</span>
+            <p className="text-2xl font-black text-[#064E3B] mb-0">{stats?.totalQuizzes || quizzesCount}</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-5 border border-[#D1FAE5] shadow-xs flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-0">Total Categories</span>
+            <p className="text-2xl font-black text-[#064E3B] mb-0">{categoriesCount}</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-5 border border-[#D1FAE5] shadow-xs flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-0">Total Users</span>
+            <p className="text-2xl font-black text-[#064E3B] mb-0">{usersCount}</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-5 border border-[#D1FAE5] shadow-xs flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-0">Total Questions</span>
+            <p className="text-2xl font-black text-[#064E3B] mb-0">{stats?.totalQuestions || 0}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Sub-component 3: Admin Login Modal
+export function AdminLoginModal({ isOpen, onClose, onSuccess }) {
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+
+    try {
+      await login(email, password);
+      setSubmitting(false);
+      onSuccess();
+    } catch (err) {
+      setError(err.message || 'Invalid admin credentials');
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-3xl border border-[#D1FAE5] shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 my-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-[#D1FAE5] bg-[#ECFDF5]/50 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <h3 className="text-sm font-bold text-[#064E3B] mb-0">Admin Portal Sign In</h3>
+          </div>
+          <button
+            className="p-1 rounded-lg text-[#64748B] hover:text-[#064E3B] hover:bg-[#ECFDF5] transition-colors cursor-pointer"
+            onClick={onClose}
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="p-4 sm:p-5 space-y-2.5">
+            {error && (
+              <div className="p-2.5 bg-[#FEF2F2] border border-[#FCA5A5] text-[#DC2626] rounded-xl text-xs font-semibold">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-[#064E3B] mb-0">Admin Email Address</label>
+              <input
+                type="email"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#D1FAE5] bg-[#F0FDF4]/30 focus:bg-white focus:outline-none focus:border-[#059669] text-[#064E3B]"
+                placeholder="admin@quiz.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-[#064E3B] mb-0">Password</label>
+              <input
+                type="password"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#D1FAE5] bg-[#F0FDF4]/30 focus:bg-white focus:outline-none focus:border-[#059669] text-[#064E3B]"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="p-3 sm:p-4 border-t border-[#D1FAE5] bg-[#ECFDF5]/50 flex justify-end gap-2">
+            <button
+              type="button"
+              className="px-3.5 py-1.5 text-xs font-semibold rounded-xl border border-[#D1FAE5] text-[#064E3B] hover:bg-white transition-colors cursor-pointer"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-3.5 py-1.5 bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
+              disabled={submitting}
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>{submitting ? 'Authenticating...' : 'Sign In'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Main Dashboard Module Component
 export default function AdminDashboard({
   categories = [],
   onAddCategory,
@@ -34,6 +380,8 @@ export default function AdminDashboard({
   onLogout,
 }) {
   const [quizzes, setQuizzes] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchFilter, setSearchFilter] = useState('');
@@ -42,26 +390,36 @@ export default function AdminDashboard({
     const path = window.location.pathname.toLowerCase();
     if (path.includes('/admin/quizzes')) return 'quizzes';
     if (path.includes('/admin/categories')) return 'categories';
+    if (path.includes('/admin/users')) return 'users';
     return 'dashboard';
   };
 
-  const [activeModule, setActiveModule] = useState(getInitialModule); // 'dashboard' | 'quizzes' | 'categories'
+  const [activeModule, setActiveModule] = useState(getInitialModule); // 'dashboard' | 'quizzes' | 'categories' | 'users'
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Selected Quiz for MCQ Management
   const [mcqQuiz, setMcqQuiz] = useState(null);
   const [isMcqModalOpen, setIsMcqModalOpen] = useState(false);
 
-  // New Category Input state
-  const [newCatName, setNewCatName] = useState('');
-
   // Category Edit Modal State
   const [editingCategory, setEditingCategory] = useState(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
-  const handleOpenEditCategoryModal = (cat) => {
-    setEditingCategory(cat);
-    setIsCategoryModalOpen(true);
+  // User Edit Modal State
+  const [userToEdit, setUserToEdit] = useState(null);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const userList = await api.getAllUsers();
+      setUsers(userList || []);
+    } catch (err) {
+      console.warn('Failed to fetch user list:', err.message);
+      setUsers([]);
+    } finally {
+      setUsersLoading(false);
+    }
   };
 
   const fetchDashboardData = async () => {
@@ -83,6 +441,7 @@ export default function AdminDashboard({
         };
       }
       setStats(adminStats);
+      await fetchUsers();
     } catch (err) {
       console.error('Error loading admin dashboard:', err.message);
     } finally {
@@ -100,6 +459,8 @@ export default function AdminDashboard({
         setActiveModule('quizzes');
       } else if (path.includes('/admin/categories')) {
         setActiveModule('categories');
+      } else if (path.includes('/admin/users')) {
+        setActiveModule('users');
       } else if (path.includes('/admin/dashboard')) {
         setActiveModule('dashboard');
       }
@@ -126,6 +487,40 @@ export default function AdminDashboard({
       window.history.pushState({}, '', '/admin/quizzes');
     } else if (mod === 'categories') {
       window.history.pushState({}, '', '/admin/categories');
+    } else if (mod === 'users') {
+      window.history.pushState({}, '', '/admin/users');
+      fetchUsers();
+    }
+  };
+
+  // User Actions
+  const handleOpenAddUser = () => {
+    setUserToEdit(null);
+    setIsUserModalOpen(true);
+  };
+
+  const handleOpenEditUser = (user) => {
+    setUserToEdit(user);
+    setIsUserModalOpen(true);
+  };
+
+  const handleSaveUser = async (userData) => {
+    if (userData._id) {
+      await api.updateUser(userData._id, userData);
+    } else {
+      await api.createUser(userData);
+    }
+    await fetchUsers();
+  };
+
+  const handleDeleteUser = async (user) => {
+    if (window.confirm(`Are you sure you want to delete user account "${user.name}"?`)) {
+      try {
+        await api.deleteUser(user._id);
+        await fetchUsers();
+      } catch (err) {
+        alert(err.message || 'Failed to delete user account');
+      }
     }
   };
 
@@ -134,11 +529,9 @@ export default function AdminDashboard({
     setIsMcqModalOpen(true);
   };
 
-  const handleCreateCategorySubmit = (e) => {
-    e.preventDefault();
-    if (!newCatName.trim()) return;
-    onAddCategory(newCatName.trim());
-    setNewCatName('');
+  const handleOpenEditCategoryModal = (cat) => {
+    setEditingCategory(cat);
+    setIsCategoryModalOpen(true);
   };
 
   const filteredQuizzes = quizzes.filter((q) => {
@@ -152,8 +545,8 @@ export default function AdminDashboard({
   });
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] w-full">
-      {/* Separate Sidebar Component */}
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#F0FDF4] w-full">
+      {/* Sidebar Sub-component */}
       <Sidebar
         activeModule={activeModule}
         onModuleSelect={handleModuleSelect}
@@ -163,320 +556,51 @@ export default function AdminDashboard({
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 p-6 space-y-6 overflow-y-auto min-w-0">
-
-
-        {/* Dashboard Module */}
+      <main className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto min-w-0">
+        {/* Dashboard Overview Module */}
         {activeModule === 'dashboard' && (
-          <div className="space-y-6">
-            <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-bold text-[#1E293B]">Admin Dashboard</h2>
-              </div>
-            </div>
-            {/* Metrics Cards Grid - Flexible & Responsive */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="bg-white rounded-xl p-5 border border-[#E2E8F0] shadow-xs flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">Total Quizzes</span>
-                  <p className="text-2xl font-black text-[#1E293B]">{stats?.totalQuizzes || quizzes.length}</p>
-                </div>
-                <div className="p-3 rounded-xl bg-[#F59E0B]/10 text-[#F59E0B]">
-                  <FileText className="w-6 h-6" />
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl p-5 border border-[#E2E8F0] shadow-xs flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">Total Categories</span>
-                  <p className="text-2xl font-black text-[#1E293B]">{categories.length}</p>
-                </div>
-                <div className="p-3 -xl bg-[#2563EB]/10 text-[#2563EB]">
-                  <Tag className="w-6 h-6" />
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl p-5 border border-[#E2E8F0] shadow-xs flex items-center justify-between gap-4 hover:shadow-md transition-shadow sm:col-span-2 lg:col-span-1">
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">Total Questions</span>
-                  <p className="text-2xl font-black text-[#1E293B]">{stats?.totalQuestions || 0}</p>
-                </div>
-                <div className="p-3 rounded-xl bg-[#22C55E]/10 text-[#22C55E]">
-                  <HelpCircle className="w-6 h-6" />
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions Grid - Flexible & Responsive */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-xs flex flex-col justify-between space-y-4 hover:border-[#2563EB]/40 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-[#2563EB]/10 text-[#2563EB]">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[#1E293B]">Quiz Management</h3>
-                    <p className="text-xs text-[#64748B]">Manage quizzes & questions</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleModuleSelect('quizzes')}
-                  className="w-full py-2 px-3 text-xs font-semibold rounded-lg border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#1E293B] flex items-center justify-center transition-colors cursor-pointer"
-                >
-                  Manage Quizzes
-                </button>
-              </div>
-
-              <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-xs flex flex-col justify-between space-y-4 hover:border-[#14B8A6]/40 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-[#14B8A6]/10 text-[#14B8A6]">
-                    <Tag className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[#1E293B]">Category Management</h3>
-                    <p className="text-xs text-[#64748B]">Organize quiz categories</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleModuleSelect('categories')}
-                  className="w-full py-2 px-3 text-xs font-semibold rounded-lg border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#1E293B] flex items-center justify-center transition-colors cursor-pointer"
-                >
-                  Manage Categories
-                </button>
-              </div>
-
-              <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-xs flex flex-col justify-between space-y-4 hover:border-[#F59E0B]/40 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-[#F59E0B]/10 text-[#F59E0B]">
-                    <Plus className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[#1E293B]">Create Quiz</h3>
-                    <p className="text-xs text-[#64748B]">Add a new quiz</p>
-                  </div>
-                </div>
-                <button
-                  onClick={onAddQuiz}
-                  className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-[#2563EB] text-white hover:bg-[#1D4ED8] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" /> Create Quiz
-                </button>
-              </div>
-            </div>
-          </div>
+          <AdminOverview
+            stats={stats}
+            quizzesCount={quizzes.length}
+            categoriesCount={categories.length}
+            usersCount={users.filter((u) => u.role?.toLowerCase() !== 'admin').length}
+            onModuleSelect={handleModuleSelect}
+            onAddQuiz={onAddQuiz}
+          />
         )}
 
         {/* Quiz Management Module */}
         {activeModule === 'quizzes' && (
-          <div className="space-y-6">
-            <div className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-bold text-[#1E293B]">Quiz Management</h2>
-              </div>
-
-              <button
-                onClick={onAddQuiz}
-                className="px-4 py-2 bg-[#2563EB] text-white hover:bg-[#1D4ED8] text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add New Quiz</span>
-              </button>
-            </div>
-
-            {loading ? (
-              <div className="bg-white rounded-xl border border-[#E2E8F0] p-12 text-center text-xs text-[#64748B]">
-                Loading Quizzes...
-              </div>
-            ) : filteredQuizzes.length === 0 ? (
-              <div className="bg-white p-12 rounded-xl border border-[#E2E8F0] text-center space-y-4">
-                <h3 className="text-sm font-bold text-[#1E293B]">No Quizzes Available</h3>
-                <p className="text-xs text-[#64748B]">Get started by adding your first quiz.</p>
-                <button
-                  onClick={onAddQuiz}
-                  className="px-4 py-2 bg-[#2563EB] text-white text-xs font-semibold rounded-xl inline-flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" /> Add Quiz
-                </button>
-              </div>
-            ) : (
-              /* Quiz Cards Grid View */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredQuizzes.map((quiz) => (
-                  <div
-                    key={quiz._id}
-                    onClick={() => handleOpenMcqModal(quiz)}
-                    className="bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4 cursor-pointer group"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-3">
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#F59E0B]/10 text-[#D97706] border border-[#F59E0B]/20">
-                          {quiz.category}
-                        </span>
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${quiz.difficulty === 'Easy'
-                            ? 'bg-[#22C55E]/10 text-[#22C55E]'
-                            : quiz.difficulty === 'Medium'
-                              ? 'bg-[#F59E0B]/10 text-[#D97706]'
-                              : 'bg-[#EF4444]/10 text-[#EF4444]'
-                            }`}
-                        >
-                          {quiz.difficulty}
-                        </span>
-                      </div>
-
-                      <h3 className="text-base font-bold text-[#1E293B] group-hover:text-[#2563EB] transition-colors mb-1">{quiz.title}</h3>
-                      <p className="text-xs text-[#64748B] line-clamp-2">{quiz.description}</p>
-                    </div>
-
-                    <div className="pt-3 border-t border-[#E2E8F0] space-y-3">
-                      <div className="flex items-center justify-between text-xs text-[#64748B] font-medium">
-                        <div className="flex items-center gap-1.5">
-                          <HelpCircle className="w-4 h-4 text-[#2563EB]" />
-                          <span>{quiz.questions ? quiz.questions.length : 0} MCQs</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-4 h-4 text-[#64748B]" />
-                          <span>{quiz.durationMinutes} Mins</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenMcqModal(quiz);
-                          }}
-                          className="flex-1 py-2 px-3 bg-[#2563EB]/10 hover:bg-[#2563EB]/20 text-[#2563EB] text-xs font-semibold rounded-lg transition-colors cursor-pointer text-center"
-                        >
-                          ADD MCQs
-                        </button>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEditQuiz(quiz);
-                          }}
-                          className="p-2 text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg transition-colors cursor-pointer"
-                          title="Edit Quiz Metadata"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteQuiz(quiz);
-                          }}
-                          className="p-2 text-[#EF4444] hover:bg-[#EF4444]/10 border border-[#E2E8F0] rounded-lg transition-colors cursor-pointer"
-                          title="Delete Quiz"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <QuizManagement
+            filteredQuizzes={filteredQuizzes}
+            loading={loading}
+            onAddQuiz={onAddQuiz}
+            onOpenMcqModal={handleOpenMcqModal}
+            onEditQuiz={onEditQuiz}
+            onDeleteQuiz={onDeleteQuiz}
+          />
         )}
 
         {/* Category Management Module */}
         {activeModule === 'categories' && (
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs overflow-hidden">
-            <div className="p-5 border-b border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-base font-bold text-[#1E293B]">Category Management</h3>
-                <p className="text-xs text-[#64748B]">Manage active categories for public quizzes</p>
-              </div>
+          <CategoryManagement
+            categories={categories}
+            quizzes={quizzes}
+            onAddCategory={onAddCategory}
+            onOpenEditCategoryModal={handleOpenEditCategoryModal}
+            onDeleteCategory={onDeleteCategory}
+          />
+        )}
 
-              {/* Add Category Form */}
-              <form onSubmit={handleCreateCategorySubmit} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  className="px-3 py-2 text-xs rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] focus:bg-white focus:outline-none focus:border-[#2563EB] text-[#1E293B] w-48"
-                  placeholder="New category name..."
-                  value={newCatName}
-                  onChange={(e) => setNewCatName(e.target.value)}
-                  required
-                />
-                <button
-                  type="submit"
-                  className="px-3 py-2 bg-[#2563EB] text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 hover:bg-[#1D4ED8] transition-colors cursor-pointer shrink-0"
-                >
-                  <Plus className="w-4 h-4" /> Add
-                </button>
-              </form>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                    <th className="p-3 text-[11px] font-bold text-[#64748B] uppercase">Category Name</th>
-                    <th className="p-3 text-[11px] font-bold text-[#64748B] uppercase">Quiz Count</th>
-                    <th className="p-3 text-[11px] font-bold text-[#64748B] uppercase">Status</th>
-                    <th className="p-3 text-[11px] font-bold text-[#64748B] uppercase text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E2E8F0]">
-                  {categories.length === 0 ? (
-                    <tr>
-                      <td colSpan="4" className="text-center p-6 text-xs text-[#64748B]">
-                        No categories found. Add a category above!
-                      </td>
-                    </tr>
-                  ) : (
-                    categories.map((cat) => {
-                      const quizCount = quizzes.filter((q) => q.category === cat.name).length;
-                      const isActive = cat.is_active !== false;
-
-                      return (
-                        <tr key={cat.name} className="hover:bg-[#F8FAFC]/50 text-xs text-[#1E293B]">
-                          <td className="p-3 font-bold">{cat.name}</td>
-                          <td className="p-3 text-[#64748B] font-medium">{quizCount} Quizzes</td>
-                          <td className="p-3">
-                            {isActive ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#22C55E]/10 text-[#22C55E]">
-                                <CheckCircle2 className="w-3 h-3" /> Active
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#EF4444]/10 text-[#EF4444]">
-                                <XCircle className="w-3 h-3" /> Inactive
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-3 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              {/* Borderless Edit Button */}
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEditCategoryModal(cat)}
-                                className="p-1.5 rounded-lg text-[#2563EB] hover:bg-[#2563EB]/10 transition-colors cursor-pointer inline-flex"
-                                title="Edit Category"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </button>
-
-                              {/* Borderless Delete Button */}
-                              <button
-                                type="button"
-                                onClick={() => onDeleteCategory(cat.name)}
-                                className="p-1.5 rounded-lg text-[#EF4444] hover:bg-[#EF4444]/10 transition-colors cursor-pointer inline-flex"
-                                title="Delete Category"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {/* User Management Module */}
+        {activeModule === 'users' && (
+          <UserManagement
+            users={users}
+            loading={usersLoading}
+            onAddUser={handleOpenAddUser}
+            onEditUser={handleOpenEditUser}
+            onDeleteUser={handleDeleteUser}
+          />
         )}
       </main>
 
@@ -505,6 +629,17 @@ export default function AdminDashboard({
             return onUpdateCategory(oldName, newName, isActive);
           }
         }}
+      />
+
+      {/* User Edit / Create Modal */}
+      <UserEditModal
+        isOpen={isUserModalOpen}
+        userToEdit={userToEdit}
+        onClose={() => {
+          setIsUserModalOpen(false);
+          setUserToEdit(null);
+        }}
+        onSave={handleSaveUser}
       />
     </div>
   );

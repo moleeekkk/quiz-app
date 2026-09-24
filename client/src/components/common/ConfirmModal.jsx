@@ -9,37 +9,37 @@ export default function ConfirmModal({ isOpen, title, message, onCancel, onConfi
       onClick={onCancel}
     >
       <div 
-        className="bg-white rounded-2xl border border-[#E2E8F0] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200"
+        className="bg-white rounded-2xl border border-[#D1FAE5] shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-4 border-b border-[#E2E8F0] flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-[#EF4444]/10 text-[#EF4444]">
-              <AlertTriangle className="w-5 h-5" />
+        <div className="p-4 border-b border-[#D1FAE5] flex items-center justify-between bg-[#ECFDF5]/50">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-xl bg-[#DC2626]/10 text-[#DC2626]">
+              <AlertTriangle className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-[#1E293B]">{title || 'Confirm Action'}</h3>
+            <h3 className="text-xs sm:text-sm font-bold text-[#064E3B] mb-0">{title || 'Confirm Action'}</h3>
           </div>
           <button 
-            className="p-1 rounded-lg text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-[#64748B] hover:text-[#064E3B] hover:bg-[#ECFDF5] transition-colors cursor-pointer"
             onClick={onCancel}
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-6">
-          <p className="text-xs text-[#64748B] leading-relaxed">{message}</p>
+        <div className="p-4">
+          <p className="text-xs text-[#334155] leading-relaxed mb-0">{message}</p>
         </div>
 
-        <div className="p-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex justify-end gap-2">
+        <div className="p-3 border-t border-[#D1FAE5] bg-[#F0FDF4]/50 flex justify-end gap-2">
           <button 
-            className="px-4 py-2 text-xs font-semibold rounded-xl border border-[#E2E8F0] text-[#1E293B] hover:bg-white transition-colors cursor-pointer"
+            className="px-3.5 py-1.5 text-xs font-semibold rounded-xl border border-[#D1FAE5] text-[#334155] bg-white hover:bg-[#ECFDF5] transition-colors cursor-pointer"
             onClick={onCancel}
           >
             Cancel
           </button>
           <button 
-            className="px-4 py-2 bg-[#EF4444] hover:bg-[#DC2626] text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer shadow-xs"
+            className="px-3.5 py-1.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer shadow-2xs"
             onClick={onConfirm}
           >
             Delete Permanently

@@ -1,15 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+:root {
+  --primary-500: #10B981;
+  --primary-600: #059669;
+  --primary-700: #047857;
+  --primary-800: #065F46;
+  --primary-900: #064E3B;
+
+  --bg-main: #F0FDF4;
+  --bg-secondary: #ECFDF5;
+  --bg-card: #FFFFFF;
+  --bg-dark: #022C22;
+
+  --text-primary: #064E3B;
+  --text-normal: #334155;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+
+  --border-light: #D1FAE5;
+  --border-normal: #A7F3D0;
+}
+
 @layer base {
   * {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   body {
-    background-color: #F8FAFC;
-    color: #0F172A;
+    background-color: #F0FDF4;
+    color: #334155;
     min-height: 100vh;
+  }
+
+  /* Compact margins and soft angle defaults */
+  h1, h2, h3, h4, h5, h6 {
+    margin-bottom: 0.25rem;
+    color: #064E3B;
+  }
+
+  p {
+    margin-bottom: 0.375rem;
+  }
+
+  button, input, select, textarea {
+    border-radius: 0.75rem;
   }
 }
 
@@ -19,12 +54,14 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F1F5F9;
+  background: #ECFDF5;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #A7F3D0;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #059669;
 }
+
+

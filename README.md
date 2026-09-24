@@ -32,9 +32,8 @@ This is a high-performance, industry-standard **Full-Stack MERN (MongoDB, Expres
   - **Delete**: Soft and hard delete confirmation modals with instant UI sync.
 - **One-Click Database Reset**: Restore default seed data directly from the Admin UI.
 
-### 💾 Zero-Config Database Resiliency
-- Primary connection attempts standard local/remote MongoDB instance.
-- **Automatic Fallback**: If local MongoDB is not running, the app automatically initializes an **in-memory database** (`mongodb-memory-server`) allowing instant execution out-of-the-box without setup errors!
+### 💾 Database Configuration
+- Connects to standard local or remote MongoDB instance via `MONGODB_URI`.
 
 ---
 
@@ -54,8 +53,8 @@ This is a high-performance, industry-standard **Full-Stack MERN (MongoDB, Expres
                             │  Mongoose ODM
                             ▼
  ┌────────────────────────────────────────────────────────┐
- │           MongoDB / MongoMemoryServer (Database)       │
- │                  (Users & Quizzes Collections)         │
+ │                   MongoDB (Database)                   │
+ │              (Users & Quizzes Collections)             │
  └────────────────────────────────────────────────────────┘
 ```
 
@@ -84,7 +83,7 @@ QUIZ-APP/
 │   └── package.json            # Client Dependencies
 │
 ├── server/                     # Backend API Workspace (Node.js + Express + MongoDB)
-│   ├── config/                 # DB Connection & MongoMemoryServer Fallback (db.js)
+│   ├── config/                 # DB Connection setup (db.js)
 │   ├── controllers/            # Business Logic Handlers (authController.js, quizController.js)
 │   ├── middleware/             # JWT Authentication Middleware (authMiddleware.js)
 │   ├── models/                 # Mongoose Data Schemas (User.js, Quiz.js)
@@ -113,7 +112,6 @@ QUIZ-APP/
 - **Runtime**: Node.js (v18+)
 - **Web Server**: Express.js
 - **Database**: MongoDB with Mongoose 8 ODM
-- **In-Memory Fallback**: `mongodb-memory-server`
 - **Security**: JWT (jsonwebtoken) & bcryptjs
 
 ---
@@ -194,7 +192,7 @@ Change the <code>PORT</code> variable in <code>server/.env</code> to another por
 
 <details>
 <summary><b>2. MongoDB fails to connect locally</b></summary>
-No action needed! The application automatically falls back to <code>MongoMemoryServer</code> in-memory MongoDB database so you can test immediately.
+Ensure MongoDB service is installed and running locally, or specify a valid MongoDB Atlas connection string in <code>server/.env</code> under <code>MONGODB_URI</code>.
 </details>
 
 <details>

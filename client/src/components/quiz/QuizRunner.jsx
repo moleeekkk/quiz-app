@@ -103,10 +103,18 @@ export default function QuizRunner({ quiz, onComplete, onCancel }) {
   };
 
   const handleSelectOption = (optionIndex) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [currentQuestion._id || currentIndex]: optionIndex,
-    }));
+    const qId = currentQuestion && currentQuestion._id ? currentQuestion._id.toString() : null;
+    setAnswers((prev) => {
+      const updated = {
+        ...prev,
+        [currentIndex]: optionIndex,
+        [String(currentIndex)]: optionIndex,
+      };
+      if (qId) {
+        updated[qId] = optionIndex;
+      }
+      return updated;
+    });
   };
 
   const handleNext = () => {
@@ -121,7 +129,13 @@ export default function QuizRunner({ quiz, onComplete, onCancel }) {
     }
   };
 
-  const answeredCount = Object.keys(answers).length;
+  const answeredCount = questions.filter((q, idx) => {
+    const qId = q._id ? q._id.toString() : null;
+    const choice = (qId && answers[qId] !== undefined)
+      ? answers[qId]
+      : (answers[idx] !== undefined ? answers[idx] : answers[String(idx)]);
+    return choice !== undefined && choice !== null;
+  }).length;
 
   if (!currentQuestion) {
     return (
@@ -137,26 +151,31 @@ export default function QuizRunner({ quiz, onComplete, onCancel }) {
     );
   }
 
+  const currentQId = currentQuestion._id ? currentQuestion._id.toString() : null;
+  const currentSelectedOpt = (currentQId && answers[currentQId] !== undefined)
+    ? answers[currentQId]
+    : (answers[currentIndex] !== undefined ? answers[currentIndex] : answers[String(currentIndex)]);
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col justify-between">
+    <div className="min-h-screen bg-[#F0FDF4] flex flex-col justify-between">
       {/* Top Full Width Header */}
-      <header className="bg-white border-b border-[#E2E8F0] shadow-xs px-4 sm:px-8 py-3.5 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
+      <header className="bg-white border-b border-[#D1FAE5] shadow-2xs px-3 sm:px-6 py-2 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-3">
           {/* Back Arrow & Quiz Information */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={onCancel}
-              className="p-2 rounded-xl text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] border border-[#E2E8F0] transition-colors cursor-pointer flex items-center justify-center shrink-0"
+              className="p-1.5 rounded-xl text-[#64748B] hover:text-[#064E3B] hover:bg-[#ECFDF5] border border-[#D1FAE5] transition-colors cursor-pointer flex items-center justify-center shrink-0"
               title="Back to Home"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
 
             <div>
-              <h1 className="text-sm sm:text-base font-extrabold text-[#1E293B] tracking-tight">
+              <h1 className="text-xs sm:text-sm font-extrabold text-[#064E3B] tracking-tight mb-0">
                 {quiz.title}
               </h1>
-              <p className="text-[11px] text-[#64748B] font-medium">
+              <p className="text-[10px] text-[#64748B] font-medium mb-0">
                 Question {currentIndex + 1} of {questions.length} | {answeredCount} Answered
               </p>
             </div>
@@ -164,50 +183,49 @@ export default function QuizRunner({ quiz, onComplete, onCancel }) {
 
           {/* Countdown Timer */}
           <div
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 border shadow-xs shrink-0 ${timeLeft < 120
-              ? 'bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20'
+            className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border shadow-2xs shrink-0 ${timeLeft < 120
+              ? 'bg-[#FEF2F2] text-[#DC2626] border-[#FCA5A5]'
               : 'bg-[#FEF3C7] text-[#D97706] border-[#FDE68A]'
               }`}
           >
-            <Clock className="w-4 h-4" />
+            <Clock className="w-3.5 h-3.5" />
             <span>{formatTime(timeLeft)}</span>
           </div>
         </div>
       </header>
 
       {/* Main MCQ Content Area - Compact to fit within viewport height */}
-      <main className="flex-1 flex flex-col justify-center max-w-4xl w-full mx-auto px-4 py-6">
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-xs space-y-6">
+      <main className="flex-1 flex flex-col justify-center max-w-4xl w-full mx-auto px-3 sm:px-4 py-2.5 sm:py-4">
+        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-[#D1FAE5] shadow-2xs space-y-3 sm:space-y-4">
           {/* Question Text */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-bold text-[#64748B]">
-              <span className="text-[#2563EB]">Question {currentIndex + 1} of {questions.length}</span>
-              <span className="px-2.5 py-0.5 rounded-full bg-[#2563EB]/10 text-[#2563EB]">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[11px] font-bold text-[#64748B]">
+              <span className="text-[#059669]">Question {currentIndex + 1} of {questions.length}</span>
+              <span className="px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0]">
                 +{currentQuestion.points || 10} Points
               </span>
             </div>
-            <h2 className="text-base sm:text-xl font-extrabold text-[#1E293B] leading-snug">
+            <h2 className="text-sm sm:text-lg font-extrabold text-[#064E3B] leading-snug mb-0">
               {currentIndex + 1}. {currentQuestion.questionText}
             </h2>
           </div>
 
           {/* 2-Column Options Grid (A, B on top | C, D on bottom) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
             {currentQuestion.options.map((option, optIdx) => {
-              const selectedOpt = answers[currentQuestion._id || currentIndex];
-              const isSelected = selectedOpt === optIdx;
+              const isSelected = currentSelectedOpt === optIdx;
 
               return (
                 <button
                   key={optIdx}
-                  className={`w-full p-4 rounded-xl border transition-all flex items-center gap-3 text-xs sm:text-sm text-left cursor-pointer ${isSelected
-                    ? 'border-2 border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB] font-bold shadow-xs'
-                    : 'border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white hover:border-[#2563EB] text-[#1E293B] font-semibold'
+                  className={`w-full p-2.5 sm:p-3 rounded-xl border transition-all flex items-center gap-2.5 text-xs text-left cursor-pointer ${isSelected
+                    ? 'border-2 border-[#059669] bg-[#ECFDF5] text-[#047857] font-bold shadow-2xs'
+                    : 'border-[#D1FAE5] bg-[#F0FDF4]/40 hover:bg-white hover:border-[#059669] text-[#334155] font-semibold'
                     }`}
                   onClick={() => handleSelectOption(optIdx)}
                 >
                   <div
-                    className={`w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 ${isSelected ? 'bg-[#2563EB] text-white' : 'bg-white border border-[#E2E8F0] text-[#64748B]'
+                    className={`w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 ${isSelected ? 'bg-[#059669] text-white' : 'bg-white border border-[#D1FAE5] text-[#64748B]'
                       }`}
                   >
                     {String.fromCharCode(65 + optIdx)}
@@ -219,9 +237,9 @@ export default function QuizRunner({ quiz, onComplete, onCancel }) {
           </div>
 
           {/* Navigation Controls: Previous / Next */}
-          <div className="pt-4 border-t border-[#E2E8F0] flex items-center justify-between gap-4">
+          <div className="pt-2.5 border-t border-[#D1FAE5] flex items-center justify-between gap-2.5 sm:gap-3">
             <button
-              className="px-5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-[#E2E8F0] bg-white text-[#1E293B] hover:bg-[#F8FAFC] flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3.5 sm:px-4 py-2 text-xs font-semibold rounded-xl border border-[#D1FAE5] bg-white text-[#334155] hover:bg-[#ECFDF5] flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               onClick={handlePrev}
               disabled={currentIndex === 0 || isSubmitting}
             >
@@ -231,7 +249,7 @@ export default function QuizRunner({ quiz, onComplete, onCancel }) {
 
             {currentIndex === questions.length - 1 ? (
               <button
-                className="px-6 py-2.5 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                className="px-4 sm:px-5 py-2 bg-[#059669] hover:bg-[#047857] text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
                 onClick={handleFinalSubmit}
                 disabled={isSubmitting}
               >
@@ -240,7 +258,7 @@ export default function QuizRunner({ quiz, onComplete, onCancel }) {
               </button>
             ) : (
               <button
-                className="px-6 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                className="px-4 sm:px-5 py-2 bg-[#059669] hover:bg-[#047857] text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
                 onClick={handleNext}
                 disabled={isSubmitting}
               >

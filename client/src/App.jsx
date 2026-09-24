@@ -6,18 +6,19 @@ import QuizCard from './components/quiz/QuizCard';
 import QuizRunner from './components/quiz/QuizRunner';
 import QuizResult from './components/quiz/QuizResult';
 
-import AdminDashboard from './components/admin/AdminDashboard';
-import AdminLoginModal from './components/admin/AdminLoginModal';
-import QuizEditorModal from './components/admin/QuizEditorModal';
+import UserAuthModal from './components/auth/UserAuthModal';
+import HistoryView from './components/user/HistoryView';
+import ProfileView from './components/user/ProfileView';
+
+import AdminDashboard, { AdminLoginModal } from './components/admin/AdminDashboard';
+import { QuizEditorModal } from './components/admin/QuizManagement';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { api } from './services/api';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 
-const INITIAL_CATEGORIES = [];
-
 function MainApp() {
-  const { isAdmin, loading: authLoading, logout } = useAuth();
+  const { user, isUserLoggedIn, isAdmin, loading: authLoading, logout } = useAuth();
 
   // Selected Quiz & Results - initialized from sessionStorage if present
   const [activeQuiz, setActiveQuiz] = useState(() => {
@@ -36,6 +37,12 @@ function MainApp() {
     if (path.startsWith('/admin') || hash.startsWith('#admin')) {
       return 'admin';
     }
+    if (path.startsWith('/history') || hash.startsWith('#history')) {
+      return 'history';
+    }
+    if (path.startsWith('/profile') || hash.startsWith('#profile')) {
+      return 'profile';
+    }
     if (path.startsWith('/quiz') || hash.startsWith('#quiz')) {
       if (path.includes('/result') || hash.includes('/result')) {
         return 'result';
@@ -44,18 +51,23 @@ function MainApp() {
     }
     return 'home';
   });
+
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // User Quiz Attempt summary map (for quiz card badges)
+  const [userAttemptsMap, setUserAttemptsMap] = useState({});
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
 
-  // Categories State (Name & is_active status) - populated from MongoDB Category collection
+  // Categories State
   const [categories, setCategories] = useState([]);
 
   // Modals
+  const [isUserAuthModalOpen, setIsUserAuthModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isEditorModalOpen, setIsEditorModalOpen] = useState(false);
   const [quizToEdit, setQuizToEdit] = useState(null);
@@ -70,7 +82,25 @@ function MainApp() {
     setTimeout(() => setToast(null), 3500);
   };
 
-  // URL Route listener for /admin/... and /quiz/... (waits for authLoading to complete before evaluating redirects)
+  // Fetch User Attempts Summary Map
+  const fetchUserAttemptsSummary = async () => {
+    if (isUserLoggedIn) {
+      try {
+        const summary = await api.getUserAttemptsSummary();
+        setUserAttemptsMap(summary || {});
+      } catch (e) {
+        setUserAttemptsMap({});
+      }
+    } else {
+      setUserAttemptsMap({});
+    }
+  };
+
+  useEffect(() => {
+    fetchUserAttemptsSummary();
+  }, [isUserLoggedIn]);
+
+  // URL Route listener
   useEffect(() => {
     if (authLoading) return;
 
@@ -126,13 +156,16 @@ function MainApp() {
         // Fallback to home
         window.history.replaceState({}, '', '/');
         setActiveTab('home');
+      } else if (path.startsWith('/history') || hash.startsWith('#history')) {
+        setActiveTab('history');
+      } else if (path.startsWith('/profile') || hash.startsWith('#profile')) {
+        setActiveTab('profile');
       } else if (path.startsWith('/admin') || hash.startsWith('#admin')) {
         setActiveTab('admin');
 
         if (!isAdmin) {
           setIsLoginModalOpen(true);
         } else {
-          // Admin is authenticated
           setIsLoginModalOpen(false);
           if (path === '/admin/create' || hash === '#admin/create') {
             setQuizToEdit(null);
@@ -142,7 +175,6 @@ function MainApp() {
           } else if (path === '/admin/login' || path === '/admin' || path === '/admin/') {
             window.history.replaceState({}, '', '/admin/dashboard');
           }
-          // Note: Sub-routes like /admin/quizzes and /admin/categories are preserved as is
         }
       }
     };
@@ -160,6 +192,10 @@ function MainApp() {
       if (!isAdmin) {
         setIsLoginModalOpen(true);
       }
+    } else if (tab === 'history') {
+      window.history.pushState({}, '', '/history');
+    } else if (tab === 'profile') {
+      window.history.pushState({}, '', '/profile');
     } else if (tab === 'home') {
       if (activeQuiz?._id) {
         sessionStorage.removeItem(`quiz_progress_${activeQuiz._id}`);
@@ -208,7 +244,7 @@ function MainApp() {
     return activeCategoryNames.has(catName);
   });
 
-  // Category Management Handlers - Synced with Database Collection
+  // Category Management Handlers
   const handleAddCategory = async (name) => {
     if (categories.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
       showToast('Category already exists!', 'error');
@@ -277,13 +313,29 @@ function MainApp() {
     return true;
   };
 
-  // Quiz Runner Handlers
+  // Quiz Runner Handlers - RESTRICTED TO LOGGED IN USERS
   const handleStartQuiz = (quiz) => {
+    if (!isUserLoggedIn) {
+      showToast('Please sign in or register to take any quiz!', 'error');
+      setIsUserAuthModalOpen(true);
+      return;
+    }
     setActiveQuiz(quiz);
     sessionStorage.setItem('active_quiz_data', JSON.stringify(quiz));
     window.history.pushState({}, '', `/quiz/${quiz._id || ''}`);
     setActiveTab('runner');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleRetakeQuizById = async (quizId) => {
+    try {
+      const quizData = await api.getQuizById(quizId);
+      if (quizData) {
+        handleStartQuiz(quizData);
+      }
+    } catch (err) {
+      showToast('Could not load target quiz', 'error');
+    }
   };
 
   const handleQuizComplete = (resultData) => {
@@ -296,6 +348,7 @@ function MainApp() {
       window.history.pushState({}, '', '/result');
     }
     setActiveTab('result');
+    fetchUserAttemptsSummary(); // Update summary map immediately
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -377,62 +430,75 @@ function MainApp() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F0FDF4] flex flex-col font-sans">
+      {/* Top Navbar Header */}
+      <Hero
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        selectedDifficulty={selectedDifficulty}
+        setSelectedDifficulty={setSelectedDifficulty}
+        categories={categories.filter((c) => c.is_active !== false).map((c) => c.name)}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        onOpenUserLogin={() => setIsUserAuthModalOpen(true)}
+      />
+
       {/* Main View Router */}
       {activeTab === 'home' && (
-        <>
-          <Hero
-            onExploreClick={() => {
-              const el = document.getElementById('quiz-grid-section');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            selectedDifficulty={selectedDifficulty}
-            setSelectedDifficulty={setSelectedDifficulty}
-            categories={categories.filter((c) => c.is_active !== false).map((c) => c.name)}
-          />
+        <main className="max-w-7xl mx-auto px-3 sm:px-5 pt-4 pb-8 w-full flex-1" id="quiz-grid-section">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg sm:text-xl font-bold text-[#064E3B] mb-0">
+              Available Quizzes ({publicVisibleQuizzes.length})
+            </h2>
+          </div>
 
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 w-full flex-1" id="quiz-grid-section">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-[#1E293B]">
-                Available Quizzes ({publicVisibleQuizzes.length})
-              </h2>
+          {loading ? (
+            <div className="bg-white rounded-2xl border border-[#D1FAE5] p-8 text-center text-xs text-[#64748B]">
+              Loading Available Quizzes...
             </div>
+          ) : publicVisibleQuizzes.length === 0 ? (
+            <div className="bg-white p-8 rounded-2xl border border-[#D1FAE5] text-center space-y-3 max-w-md mx-auto">
+              <p className="text-xs text-[#64748B] mb-0">No active quizzes found matching your criteria.</p>
+              <button
+                className="px-3.5 py-1.5 bg-white border border-[#D1FAE5] text-[#064E3B] text-xs font-semibold rounded-xl hover:bg-[#ECFDF5]"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('All');
+                  setSelectedDifficulty('All');
+                }}
+              >
+                Reset Filters
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {publicVisibleQuizzes.map((quiz) => (
+                <QuizCard
+                  key={quiz._id}
+                  quiz={quiz}
+                  attemptSummary={userAttemptsMap[quiz._id]}
+                  onStartQuiz={handleStartQuiz}
+                />
+              ))}
+            </div>
+          )}
+        </main>
+      )}
 
-            {loading ? (
-              <div className="bg-white rounded-xl border border-[#E2E8F0] p-12 text-center text-xs text-[#64748B]">
-                Loading Available Quizzes...
-              </div>
-            ) : publicVisibleQuizzes.length === 0 ? (
-              <div className="bg-white p-12 rounded-xl border border-[#E2E8F0] text-center space-y-4 max-w-md mx-auto">
-                <p className="text-xs text-[#64748B]">No active quizzes found matching your criteria.</p>
-                <button
-                  className="px-4 py-2 bg-white border border-[#E2E8F0] text-[#1E293B] text-xs font-semibold rounded-xl hover:bg-[#F8FAFC]"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('All');
-                    setSelectedDifficulty('All');
-                  }}
-                >
-                  Reset Filters
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {publicVisibleQuizzes.map((quiz) => (
-                  <QuizCard
-                    key={quiz._id}
-                    quiz={quiz}
-                    onStartQuiz={handleStartQuiz}
-                  />
-                ))}
-              </div>
-            )}
-          </main>
-        </>
+      {activeTab === 'history' && (
+        <HistoryView
+          onRetakeQuiz={handleRetakeQuizById}
+          onGoHome={() => handleTabChange('home')}
+        />
+      )}
+
+      {activeTab === 'profile' && (
+        <ProfileView
+          onGoToHistory={() => handleTabChange('history')}
+          onGoHome={() => handleTabChange('home')}
+        />
       )}
 
       {activeTab === 'runner' && activeQuiz && (
@@ -476,13 +542,13 @@ function MainApp() {
             }}
           />
         ) : (
-          <div className="max-w-md mx-auto my-16 p-8 bg-white rounded-2xl border border-[#E2E8F0] shadow-xs text-center space-y-4">
-            <h3 className="text-base font-bold text-[#1E293B]">Admin Authentication Required</h3>
-            <p className="text-xs text-[#64748B]">
+          <div className="max-w-md mx-auto my-6 p-6 bg-white rounded-2xl border border-[#D1FAE5] shadow-2xs text-center space-y-3">
+            <h3 className="text-sm font-bold text-[#064E3B] mb-0">Admin Authentication Required</h3>
+            <p className="text-xs text-[#64748B] mb-0">
               Please sign in with admin credentials to access the management portal.
             </p>
             <button
-              className="px-5 py-2.5 bg-[#2563EB] text-white text-xs font-semibold rounded-xl hover:bg-[#1D4ED8] transition-colors cursor-pointer"
+              className="px-4 py-2 bg-[#059669] text-white text-xs font-semibold rounded-xl hover:bg-[#047857] transition-colors cursor-pointer"
               onClick={() => {
                 window.history.pushState({}, '', '/admin/login');
                 setIsLoginModalOpen(true);
@@ -495,6 +561,16 @@ function MainApp() {
       )}
 
       {/* Modals */}
+      <UserAuthModal
+        isOpen={isUserAuthModalOpen}
+        onClose={() => setIsUserAuthModalOpen(false)}
+        onSuccess={() => {
+          setIsUserAuthModalOpen(false);
+          showToast('Successfully signed in!', 'success');
+          fetchUserAttemptsSummary();
+        }}
+      />
+
       <AdminLoginModal
         isOpen={isLoginModalOpen}
         onClose={() => {
@@ -529,12 +605,12 @@ function MainApp() {
 
       {/* Toast Notification Banner */}
       {toast && (
-        <div className="fixed bottom-5 right-5 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200">
-          <div className="bg-white border border-[#E2E8F0] shadow-lg rounded-2xl p-4 flex items-center gap-3 text-xs font-semibold text-[#1E293B]">
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-5 sm:w-auto z-50 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="bg-white border border-[#D1FAE5] shadow-lg rounded-2xl p-3 flex items-center gap-2.5 text-xs font-semibold text-[#064E3B]">
             {toast.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 text-[#22C55E]" />
+              <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-[#EF4444]" />
+              <AlertCircle className="w-4 h-4 text-[#DC2626]" />
             )}
             <span>{toast.message}</span>
           </div>
